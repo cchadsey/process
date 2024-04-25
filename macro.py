@@ -17,16 +17,17 @@ root = tk.Tk()
 root.withdraw()
 
 #Filechooser stuff.
+donedir = filedialog.askdirectory()
 rawfile = filedialog.askopenfilename()
 #print (rawfile)
 
 #need to get what cells to deal with
-case = pyautogui.prompt('What column letter is the Case count in?')
+case = pyautogui.prompt(text = 'What column letter is the Case count in?', default = 'g')
 ccount = alpha.index(case.lower()) + 1
 #print(ccount)
 
 #display start message.
-messagebox.showinfo(title = 'get ready', message= 'Doing the thing. Get your po ready, Click "OK", and bring up the page quick! (5s)')
+messagebox.showinfo(title = 'Get Ready', message= 'Doing the thing. Get your po ready, Click "OK", and bring up the page quick! (5s) To stop in an emergency, put mouse in top corner of screen.')
 
 
 #pause to give user time to select the first box for input.
@@ -65,11 +66,16 @@ for i in range(sh.nrows):
                 #emulating the keypresses using the cell data acquired earlier.
                 pyautogui.write(f'{c1[:5]}'); pyautogui.press('tab'); 
 
+                pyautogui.write(f'{c2}'); pyautogui.press('enter')
+                
                 #fixing an issue with loading on the first entry            
                 if i == 1:
                     pyautogui.countdown(5)
 
-                pyautogui.write(f'{c2}'); pyautogui.press('enter')
+                else:
+                    pass
+
+                
                 
                 #print ('hi', c1, c2)
                 
@@ -84,7 +90,7 @@ for i in range(sh.nrows):
 #            print(False)
 
 #move the file to "done" folder when completed.
-shu.move(rawfile, '/Users/mcalesterpepsi/Desktop/Code/process/done')
+shu.move(rawfile, donedir)
 #announce completion.
 pyautogui.alert('Jobs Done!')        
 
