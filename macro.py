@@ -17,7 +17,7 @@ root = tk.Tk()
 root.withdraw()
 
 #Filechooser stuff.
-donedir = filedialog.askdirectory()
+donedir = filedialog.askdirectory(initialdir="/Users/mcalesterpepsi/Desktop/Orders/OrderBatches")
 rawfile = filedialog.askopenfilename()
 #print (rawfile)
 
