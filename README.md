@@ -10,3 +10,4 @@ to do:
     [ ] warning about not using device while in progress
     [ ] print totals column?
     
+Macro has been integrated into a Gui based version. 
