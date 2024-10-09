@@ -6,23 +6,31 @@ import os
 import xlrd as xl
 import pyautogui
 import shutil as shu
+import sys
+
 
 file = ''
 folder = ''
 col= 'g'
 
+def redirOutput(text_widget):
+    class TextRedirector(object):
+        def __init__(self, widget):
+            self.widget = widget
 
-def pause_message():
-    pausem = tk.Toplevel(m)
-    pausem.title('Pause')
-    spacer = tk.Label(m, text='')
-    spacer.pack
-    label = tk.Label(m, text = 'Letting the computer think')
-    label.pack()
-    pausem.mainloop()
-    pyautogui.countdown(5) 
-    pausem.destroy
+        def write(self, string):
+            self.widget.insert(tk.END, string)
+            self.widget.see(tk.END)
 
+    sys.stdout = TextRedirector(text_widget)
+
+
+
+def pause():
+    
+    #print("Breif pause to let the computer think.")
+    pyautogui.sleep(5)
+    
 
 def process_order(case, file, folder):
 
@@ -32,15 +40,13 @@ def process_order(case, file, folder):
     pyautogui.PAUSE = 0.5
     pyautogui.FAILSAFE = True
 
-    pyautogui.countdown(5)
+    pause()
 
     bk = xl.open_workbook(file)
 
     sh= bk.sheet_by_index(0)
 
     ccount = alpha.index(case.lower())
-
-    t = alpha.index('i')
     
 
     for i in range(sh.nrows):
@@ -62,21 +68,24 @@ def process_order(case, file, folder):
                     pyautogui.write(f'{c2}'); pyautogui.press('enter')
 
                     if i == 1:
-                        #pause_message(popup)
-                        pyautogui.countdown(5)
+                        
+                        pause()
+
                         
 
                     else:
                         pass
                 elif c1 == 'TOTALS':
-                    print(c2)
+                    print('Entry Complete')
+                    print(f"Total cases: {c2}")
 
                    
 
             except:
                 pass
     os.system('printf "\a"')
-    shu.move(file, folder) 
+    shu.move(file, folder)
+    print("Done!") 
 
 def getCol():
 
@@ -88,13 +97,11 @@ def getCol():
 
 def choose_file():
     global file
+    fileLabel.configure(text = f'             ')
     file_path = fd.askopenfilename(title='Select a File')
     if file_path:
         orderbutton.config(text=f"Click to choose another file")
-        fileLabel = tk.Label(m, text = f'')
         fileLabel.config(text=f'{os.path.normpath(os.path.basename(file_path))}')
-        fileLabel.grid(row = 2, column = 0, columnspan= 1)
-        orderbutton.grid(row = 2, column = 1, columnspan= 1)
         file = file_path
     return 
 
@@ -104,9 +111,7 @@ def choose_folder():
     folder_path = fd.askdirectory(initialdir ='/Users/mcalesterpepsi/Desktop/Orders/OrderBatches', title = 'Select an Output Folder')
     if folder_path:
         folderbutton.config(text=f'Folder Selected')
-        folderlabel = tk.Label(m, text = f'./{os.path.normpath(os.path.basename(folder_path))}')
-        folderlabel.grid(row = 1, column = 0, columnspan= 1)
-        folderbutton.grid(row = 1, column = 1, columnspan= 1)
+        folderlabel.config(text = f'./{os.path.normpath(os.path.basename(folder_path))}')
         folder = folder_path
     return 
 
@@ -123,20 +128,32 @@ def action_popup():
     label = tk.Label(popup, text = 'Prepare for process. Get PO ready for entry.')
     label.pack()
 
-    label2 = tk.Label(popup, padx = 15, text= 'Once you press READY you have 5s to select the entry box for the item code.')
+    label2 = tk.Label(popup, padx = 15, text= 'Once you press BEGIN you have 5s to select the entry box for the item code.')
     label2.pack()
 
     label3 = tk.Label(popup, text = 'Once the process begins, do not interact with computer until done.')
     label3.pack()
 
-    label5 = tk.Label()
+    label5 = tk.Label(popup, text='')
     label5.pack()
 
     label4 = tk.Label(popup, text= 'To kill application in an emergency, move mouse to top corner of monitor.')
     label4.pack()
 
+    label6 = tk.Label(popup, text='')
+    label6.pack()
+
+    boxlabel = tk.Label(popup, text='Status output')
+    boxlabel.pack()
+
+    box1 = tk.Text(popup, width=50, height=5, background='white', foreground="black")
+    box1.pack()
+
+    redirOutput(box1)
+    popup.register
+
     button = tk.Button(popup, text = 'BEGIN', command = working_popup)
-    button2 = tk.Button(popup, text = 'Return', command = popup.destroy)
+    button2 = tk.Button(popup, text = 'Close Popup', command = popup.destroy)
 
     
     button.pack()
@@ -149,35 +166,19 @@ def action_popup():
 
 def working_popup():
 
-    w = tk.Toplevel(m)
-    w.title('Working')
-    wspace = tk.Label(w, text='')
-    wspace.pack()
-    wlabel = tk.Label(w, text='Working on it!')
-    wlabel.pack()
-    wcon = st.
-
 
     process_order(col, file, folder)
-    w.destroy()
-    
-    fin = tk.Toplevel()
-    fin.title('Done!')
-    spacer = tk.Label(fin, text='')
-    spacer.pack()
-    label = tk.Label(fin, text = 'Job done! choose another file, or cancel to quit!')
-    label.pack()
-    button = tk.Button(fin, text = 'Done', command = fin.destroy)
-    button.pack()
 
-def reset_file()
 
 
 m = tk.Tk()
 m.title('VIP Supplier Order Entry')
 
 folderbutton = tk.Button(m, text =f'Select Finished Folder', width= 25, command = choose_folder)
+folderlabel = tk.Label(m, text = f'')
 orderbutton = tk.Button(m, text=f'Select File', width = 25, command = choose_file)
+fileLabel = tk.Label(m, text = f'')
+
 
 
 colLabel = tk.Label(m, text = 'Case count Column')
@@ -195,8 +196,10 @@ pythImg = ImageTk.PhotoImage(image = rimg)
 image = tk.Label(m, image = pythImg, padx = 25, pady = 25)
 
 #arrange main window in grid
-folderbutton.grid(row = 1, column = 0, columnspan= 3)
-orderbutton.grid(row = 2, column = 0, columnspan= 3)
+folderbutton.grid(row = 1, column =1, columnspan= 2)
+folderlabel.grid(row = 1, column=0, columnspan=1)
+orderbutton.grid(row = 2, column =1, columnspan= 2)
+fileLabel.grid(row=2, column=0 ,columnspan=  1)
 colLabel.grid(row=3, column = 0)
 colentry.grid(row=3, column = 1)
 colbutton.grid(pady = 10, row = 3, column = 2)
