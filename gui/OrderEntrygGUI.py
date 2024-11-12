@@ -13,26 +13,30 @@ file = ''
 folder = ''
 col= 'g'
 
-def redirOutput(text_widget):
-    class TextRedirector(object):
-        def __init__(self, widget):
-            self.widget = widget
-
-        def write(self, string):
-            self.widget.insert(tk.END, string)
-            self.widget.see(tk.END)
-
-    sys.stdout = TextRedirector(text_widget)
 
 
 
-def pause():
-    
-    #print("Breif pause to let the computer think.")
-    pyautogui.sleep(5)
+
     
 
-def process_order(case, file, folder):
+def process_order(case, file, folder, popup):
+
+    popup.destroy()
+    wp = tk.Toplevel(m, bd=50)
+    wp.geometry(f"+{2*height}+{2//width}")
+
+    l1 = tk.Label(wp, text= "you have 5s to select the entry field")
+    l1.pack()
+
+    boxlabel = tk.Label(wp, text='Status output')
+    boxlabel.pack()
+
+    box1 = tk.Text(wp, width=50, height=5, background='white', foreground="black")
+    box1.pack()
+
+    box1.insert(tk.END, f"Begining process")
+    wp.update_idletasks()
+    wp.update()
 
     
     alpha = "abcdefghijklmnopqrstuvwxyz"
@@ -40,7 +44,14 @@ def process_order(case, file, folder):
     pyautogui.PAUSE = 0.5
     pyautogui.FAILSAFE = True
 
-    pause()
+
+    wp.after(1, box1.insert(tk.END, f"\nPausing to let the computer think"))
+    wp.update_idletasks()
+    wp.update()
+    pyautogui.sleep(5)
+    wp.after(1, box1.insert(tk.END, f"\nContinuing process"))
+    wp.update_idletasks()
+    wp.update()
 
     bk = xl.open_workbook(file)
 
@@ -69,23 +80,33 @@ def process_order(case, file, folder):
 
                     if i == 1:
                         
-                        pause()
+                            box1.config(tk.END, "Pausing to let the computer think")
+                            wp.update_idletasks()
+                            wp.update()
+                            pyautogui.sleep(5)
+                            box1.config(tk.END, "Continuing process")
+                            wp.update_idletasks()
+                            wp.update()
 
                         
 
                     else:
                         pass
                 elif c1 == 'TOTALS':
-                    print('Entry Complete')
-                    print(f"Total cases: {c2}")
+                    box1.insert(tk.END, f"\nEntry Complete. \nTotal Cases {c2}")
+                    endbutton = tk.Button(wp, text="done", command = wp.destroy)
+                    endbutton.pack()
+                    wp.update_idletasks()
+                    wp.update()
+                    os.system('printf "\a"')
+                    shu.move(file, folder)
+
 
                    
 
             except:
                 pass
-    os.system('printf "\a"')
-    shu.move(file, folder)
-    print("Done!") 
+
 
 def getCol():
 
@@ -119,6 +140,7 @@ def action_popup():
 
 
     popup = tk.Toplevel(m)
+    popup.geometry(f"+{2*height}+{2//width}")
 
     popup.title('prepare')
 
@@ -128,8 +150,8 @@ def action_popup():
     label = tk.Label(popup, text = 'Prepare for process. Get PO ready for entry.')
     label.pack()
 
-    label2 = tk.Label(popup, padx = 15, text= 'Once you press BEGIN you have 5s to select the entry box for the item code.')
-    label2.pack()
+    #label2 = tk.Label(popup, padx = 15, text= 'Once you press BEGIN you have 5s to select the entry box for the item code.')
+    #label2.pack()
 
     label3 = tk.Label(popup, text = 'Once the process begins, do not interact with computer until done.')
     label3.pack()
@@ -143,35 +165,25 @@ def action_popup():
     label6 = tk.Label(popup, text='')
     label6.pack()
 
-    boxlabel = tk.Label(popup, text='Status output')
-    boxlabel.pack()
 
-    box1 = tk.Text(popup, width=50, height=5, background='white', foreground="black")
-    box1.pack()
+    
 
-    redirOutput(box1)
-    popup.register
-
-    button = tk.Button(popup, text = 'BEGIN', command = working_popup)
+    button = tk.Button(popup, text = 'BEGIN', command = lambda : process_order(col, file, folder, popup))
     button2 = tk.Button(popup, text = 'Close Popup', command = popup.destroy)
 
     
     button.pack()
     button2.pack()
 
-    popup.mainloop()
-
-
-   
-
-def working_popup():
-
-
-    process_order(col, file, folder)
 
 
 
 m = tk.Tk()
+size = m.winfo_screenwidth()
+width = size//2
+height = m.winfo_screenheight()
+m.geometry(f"+{2*height}+{2//width}")
+m.winfo_toplevel()
 m.title('VIP Supplier Order Entry')
 
 folderbutton = tk.Button(m, text =f'Select Finished Folder', width= 25, command = choose_folder)
