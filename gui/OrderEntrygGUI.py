@@ -6,23 +6,38 @@ import os
 import xlrd as xl
 import pyautogui
 import shutil as shu
-import sys
+from pynput.keyboard import Key, Controller
+#import pyperclip#
+
+kbd = Controller()
 
 
 file = ''
 folder = ''
 col= 'g'
 
+def stroke(key):
+    kbd.press(key)
+    kbd.release(key)
+
+
+#def copy():
+   # with kbd.pressed(Key.cmd):
+   #     kbd.press('a')
+   #     kbd.release('a')
+   # with kbd.pressed(Key.cmd):
+   #     kbd.press('c')
+   #     kbd.release('c')
+   # with kbd.pressed(Key.cmd):
+   #     kbd.press('v')
+   #     kbd.release('v')
 
 
 
-
-    
-
-def process_order(case, file, folder, popup):
+def process_order(case, file, folder, popup, supplier):
 
     popup.destroy()
-    wp = tk.Toplevel(m, bd=50)
+    wp = tk.Toplevel(m, bd=75)
     wp.geometry(f"+{2*height}+{2//width}")
 
     l1 = tk.Label(wp, text= "you have 5s to select the entry field")
@@ -31,12 +46,16 @@ def process_order(case, file, folder, popup):
     boxlabel = tk.Label(wp, text='Status output')
     boxlabel.pack()
 
-    box1 = tk.Text(wp, width=50, height=5, background='white', foreground="black")
+    box1 = tk.Text(wp, width=50, height=10, background='white', foreground="black")
     box1.pack()
 
     box1.insert(tk.END, f"Begining process")
     wp.update_idletasks()
     wp.update()
+
+
+
+
 
     
     alpha = "abcdefghijklmnopqrstuvwxyz"
@@ -45,11 +64,21 @@ def process_order(case, file, folder, popup):
     pyautogui.FAILSAFE = True
 
 
-    wp.after(1, box1.insert(tk.END, f"\nPausing to let the computer think"))
+    wp.after(1, box1.insert(tk.END, f"\nGet Ready"))
     wp.update_idletasks()
     wp.update()
-    pyautogui.sleep(5)
-    wp.after(1, box1.insert(tk.END, f"\nContinuing process"))
+    
+    i = 5 
+
+    wp.after(1, box1.insert(tk.END, f"\nCountdown"))
+    while i > 0:
+        wp.after(1, box1.insert(tk.END, f"{i}."))
+        wp.update_idletasks()
+        wp.update()
+        pyautogui.countdown(1)
+        i -= 1
+
+    wp.after(1, box1.insert(tk.END, f"\nProcessing"))
     wp.update_idletasks()
     wp.update()
 
@@ -58,7 +87,78 @@ def process_order(case, file, folder, popup):
     sh= bk.sheet_by_index(0)
 
     ccount = alpha.index(case.lower())
+
+    ddate = alpha.index('j')
+
+    #selecting open window
+    pyautogui.click(1000,400)
+    pyautogui.countdown(2)
+
+    #making new PO CHANGE TO F6 AFTER TESTING
+    pyautogui.press('f6')
+
+    #copying po number to variable for later refrence.
+    #copy()
     
+    
+    #po = pyperclip.paste()
+    #print(po)
+
+    #forward screen
+    pyautogui.press('enter')
+    pyautogui.countdown(2)
+
+
+    for i in range(sh.nrows):
+        if i!= 0 and sh.row_values(i)[ddate] != '':
+            row = sh.row_values(i)
+
+            rawdate = row[ddate]
+            dstring = []
+            dstring = rawdate.split('.')
+            month = dstring[0]
+            day = dstring[1]
+            year = dstring[2]
+            if len(month) <2:
+                month= '0'+month
+            if len(day) <2:
+                day= '0'+day
+            
+            shipdate = month+day+year
+            
+
+    pyautogui.countdown(1)
+
+    #set up po
+    if supplier == 'c':
+        stroke('a')
+        stroke('a')
+        pyautogui.press('tab')
+        stroke('A')
+        stroke('a')
+        stroke('1')
+        pyautogui.press('tab')
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+    else:
+        stroke('b')
+        stroke('a')
+        pyautogui.press('tab')
+        stroke('b')
+        stroke('a')
+        stroke('1')
+        pyautogui.press('tab')
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+        
+    pyautogui.press('enter')
+    pyautogui.countdown(1)
+
+
 
     for i in range(sh.nrows):
         if i != 0:
@@ -80,25 +180,24 @@ def process_order(case, file, folder, popup):
 
                     if i == 1:
                         
-                            box1.config(tk.END, "Pausing to let the computer think")
-                            wp.update_idletasks()
-                            wp.update()
-                            pyautogui.sleep(5)
-                            box1.config(tk.END, "Continuing process")
-                            wp.update_idletasks()
-                            wp.update()
+                        wp.after(1, box1.insert(tk.END, f"\nPausing to let the computer think"))
+                        wp.update_idletasks()
+                        wp.update()
+                        pyautogui.sleep(5)
+                        wp.after(1, box1.insert(tk.END, f"\nContinuing process"))
+                        wp.update_idletasks()
+                        wp.update()
 
                         
 
                     else:
                         pass
                 elif c1 == 'TOTALS':
-                    box1.insert(tk.END, f"\nEntry Complete. \nTotal Cases {c2}")
+                    box1.insert(tk.END, f"\nEntry Complete. \n PO#: {po} \nTotal Cases {c2}")
                     endbutton = tk.Button(wp, text="done", command = wp.destroy)
                     endbutton.pack()
                     wp.update_idletasks()
                     wp.update()
-                    os.system('printf "\a"')
                     shu.move(file, folder)
 
 
@@ -147,7 +246,7 @@ def action_popup():
     spacer = tk.Label(popup, text = '')
     spacer.pack()
 
-    label = tk.Label(popup, text = 'Prepare for process. Get PO ready for entry.')
+    label = tk.Label(popup, text = 'Prepare for process. Get KEYINVEN open.')
     label.pack()
 
     #label2 = tk.Label(popup, padx = 15, text= 'Once you press BEGIN you have 5s to select the entry box for the item code.')
@@ -168,14 +267,22 @@ def action_popup():
 
     
 
-    button = tk.Button(popup, text = 'BEGIN', command = lambda : process_order(col, file, folder, popup))
+    button = tk.Button(popup, text = 'BEGIN', command = lambda : process_order(col, file, folder, popup, supplier))
     button2 = tk.Button(popup, text = 'Close Popup', command = popup.destroy)
 
     
     button.pack()
     button2.pack()
 
-
+def setvar(strng):
+    
+    supplier = strng
+    if supplier == 'w':
+        suplabel.config(text='Wispak Selected')
+    elif supplier =='c':
+        suplabel.config(text="Conops Selected")
+    m.update_idletasks()
+    m.update()
 
 
 m = tk.Tk()
@@ -198,6 +305,11 @@ colentry = tk.Entry(m, textvariable = '', width= 5)
 colentry.insert(0, 'g')
 colbutton = tk.Button(m, text= 'set', width= 10, command= getCol)
 
+supplier = ''
+suplabel = tk.Label(m, text= "Choose Supplier")
+WpButton = tk.Button(m , text = "Wispak", width = 10, command = lambda: setvar('w'))
+conButton = tk.Button(m, text = 'Conops', width= 10, command = lambda : setvar('c'))
+
 
 ok =  tk.Button(m, text='Ready', width = 10, command = action_popup)
 cancel = tk.Button(m, text='Cancel', width=10, command = m.destroy)
@@ -215,6 +327,9 @@ fileLabel.grid(row=2, column=0 ,columnspan=  1)
 colLabel.grid(row=3, column = 0)
 colentry.grid(row=3, column = 1)
 colbutton.grid(pady = 10, row = 3, column = 2)
+suplabel.grid(row=4, column=0)
+WpButton.grid(row=4, column=1)
+conButton.grid(row=4, column = 2)
 ok.grid(pady = 20, row = 5, column = 1)
 cancel.grid(row = 5, column = 2, padx = 20)
 image.grid(row = 1, column = 3,rowspan = 3, columnspan = 3,pady = 15, padx = 15)
