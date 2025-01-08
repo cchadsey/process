@@ -193,7 +193,7 @@ def process_order(case, file, folder, popup, supplier):
                     else:
                         pass
                 elif c1 == 'TOTALS':
-                    box1.insert(tk.END, f"\nEntry Complete. \n PO#: {po} \nTotal Cases {c2}")
+                    box1.insert(tk.END, f"\nEntry Complete. \nTotal Cases {c2}")
                     endbutton = tk.Button(wp, text="done", command = wp.destroy)
                     endbutton.pack()
                     wp.update_idletasks()
