@@ -1,13 +1,27 @@
 import tkinter as tk
 from tkinter import filedialog as fd
-from tkinter.scrolledtext import ScrolledText as st
 from PIL import Image, ImageTk
 import os
 import xlrd as xl
 import pyautogui
 import shutil as shu
 from pynput.keyboard import Key, Controller
-#import pyperclip#
+import datetime
+
+def conopDay(daysfromnow):
+    today = datetime.date.today()
+    futuredate = today +datetime.timedelta(days= daysfromnow)
+    dayofweek = futuredate.weekday()
+    
+    daystillmonday = 7 - dayofweek if dayofweek !=0 else 0
+
+    if daystillmonday >= 4:
+        answ = futuredate + datetime.timedelta(days=daystillmonday)
+    else :
+        answ = futuredate
+    
+    return answ.strftime('%m%d%y')
+
 
 kbd = Controller()
 
@@ -130,7 +144,11 @@ def process_order(case, file, folder, popup, supplier):
     pyautogui.countdown(1)
 
     #set up po
-    if supplier == 'c':
+
+
+    
+    if supplier != '':
+        shipdate = conopDay(10)
         stroke('a')
         stroke('a')
         pyautogui.press('tab')
@@ -276,8 +294,9 @@ def action_popup():
 
 def setvar(strng):
     
+    global supplier
     supplier = strng
-    if supplier == 'w':
+    if supplier == '':
         suplabel.config(text='Wispak Selected')
     elif supplier =='c':
         suplabel.config(text="Conops Selected")
@@ -307,7 +326,7 @@ colbutton = tk.Button(m, text= 'set', width= 10, command= getCol)
 
 supplier = ''
 suplabel = tk.Label(m, text= "Choose Supplier")
-WpButton = tk.Button(m , text = "Wispak", width = 10, command = lambda: setvar('w'))
+WpButton = tk.Button(m , text = "Wispak", width = 10, command = lambda: setvar(''))
 conButton = tk.Button(m, text = 'Conops', width= 10, command = lambda : setvar('c'))
 
 
