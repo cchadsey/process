@@ -1,0 +1,431 @@
+import tkinter as tk
+from tkinter import filedialog as fd
+from PIL import Image, ImageTk
+import os
+import xlrd as xl
+import pyautogui
+import shutil as shu
+from pynput.keyboard import Key, Controller
+import datetime
+import easyocr
+import numpy as np
+
+def conopDay(daysfromnow):
+    today = datetime.date.today()
+    futuredate = today +datetime.timedelta(days= daysfromnow)
+    dayofweek = futuredate.weekday()
+    
+    daystillmonday = 7 - dayofweek if dayofweek !=0 else 0
+
+    if daystillmonday >= 4:
+        answ = futuredate + datetime.timedelta(days=daystillmonday)
+    else :
+        answ = futuredate
+    
+    return answ.strftime('%m%d%y')
+
+orderNumbers = {}
+
+reader = easyocr.Reader(['en'])
+
+kbd = Controller()
+
+pyautogui.PAUSE = 0.5
+pyautogui.FAILSAFE = True
+
+file = ''
+folder = ''
+col= 'g'
+
+def stroke(key):
+    kbd.press(key)
+    kbd.release(key)
+
+
+def copy():
+    with kbd.pressed(Key.cmd):
+        kbd.press('a')
+        kbd.release('a')
+    with kbd.pressed(Key.cmd):
+        kbd.press('c')
+        kbd.release('c')
+    #with kbd.pressed(Key.cmd):
+        #kbd.press('v')
+        #kbd.release('v')
+
+
+def fileIteration(case, folder, finfolder, popup, supplier):
+
+    popup.destroy()
+    wp = tk.Toplevel(m, bd=75)
+    wp.geometry(f"+{2*height}+{2//width}")
+
+    l1 = tk.Label(wp, text= "you have 5s to select the entry field")
+    l1.pack()
+
+    boxlabel = tk.Label(wp, text='Status output')
+    boxlabel.pack()
+
+    box1 = tk.Text(wp, width=50, height=10, background='white', foreground="black")
+    box1.pack()
+
+    box1.insert(tk.END, f"Begining process")
+    wp.update_idletasks()
+    wp.update()
+    
+    
+    for f in os.listdir(folder):
+        file= os.fsdecode(f)
+        if 'sheet' in file:
+            pass
+        elif file.endswith('.xls'):
+
+            file = folder+'/'+os.fsdecode(f)
+            fname = os.fsdecode(f)
+
+            if 'WP' in file:
+                supplier = ''
+            elif 'C' in file:
+                supplier = 'c'
+
+            pyautogui.countdown(2)
+            print(file)
+
+            process_order(case, file, fname, finfolder, wp, box1, supplier)
+        else:
+            print('No files to process in directory')
+            pass
+
+    wp.after(1, box1.insert(tk.END, f"\nPO Numbers for this batch:"))
+    wp.update_idletasks()
+    wp.update()
+    for key, value in orderNumbers.items():
+
+        wp.after(1, box1.insert(tk.END, f"\n{key}: {value}"))
+        wp.update_idletasks()
+        wp.update()   
+    
+    wp.after(1, box1.insert(tk.END, f"\nThank you!"))
+    wp.update_idletasks()
+    wp.update() 
+
+    endbutton = tk.Button(wp, text="done", command = wp.destroy)
+    endbutton.pack()
+
+def process_order(case, file, fname, finfolder, wp,box1, supplier):
+
+
+
+    
+    alpha = "abcdefghijklmnopqrstuvwxyz"
+
+
+
+
+    wp.after(1, box1.insert(tk.END, f"\nGet Ready"))
+    wp.update_idletasks()
+    wp.update()
+    
+    i = 2
+
+    wp.after(1, box1.insert(tk.END, f"\nCountdown"))
+    while i > 0:
+        wp.after(1, box1.insert(tk.END, f"{i}."))
+        wp.update_idletasks()
+        wp.update()
+        pyautogui.countdown(1)
+        i -= 1
+
+    wp.after(1, box1.insert(tk.END, f"\nProcessing"))
+    wp.update_idletasks()
+    wp.update()
+
+    bk = xl.open_workbook(file)
+
+    sh= bk.sheet_by_index(0)
+
+    ccount = alpha.index(case.lower())
+
+    ddate = alpha.index('j')
+
+    #selecting open window
+    pyautogui.click(1000,400)
+    pyautogui.countdown(2)
+
+    #making new PO CHANGE TO F6 AFTER TESTING
+    print('pressedf6')
+
+    #copying po number to variable for later refrence.
+    copy()
+    pyautogui.countdown(1)
+    
+    po = 'thisisapo'
+    print(po)
+
+    orderNumbers[fname] = po
+
+    #forward screen
+    print('enter')
+    pyautogui.countdown(2)
+
+
+    for i in range(sh.nrows):
+        if i!= 0 and sh.row_values(i)[ddate] != '':
+            row = sh.row_values(i)
+
+            rawdate = row[ddate]
+            dstring = []
+            dstring = rawdate.split('.')
+            month = dstring[0]
+            day = dstring[1]
+            year = dstring[2]
+            if len(month) <2:
+                month= '0'+month
+            if len(day) <2:
+                day= '0'+day
+            
+            shipdate = month+day+year
+            
+
+    pyautogui.countdown(1)
+
+    #set up po
+
+
+    
+    if supplier != '':
+        shipdate = conopDay(10)
+        stroke('a')
+        stroke('a')
+        pyautogui.press('tab')
+        stroke('A')
+        stroke('a')
+        stroke('1')
+        pyautogui.press('tab')
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+    else:
+        stroke('b')
+        stroke('a')
+        pyautogui.press('tab')
+        stroke('b')
+        stroke('a')
+        stroke('1')
+        pyautogui.press('tab')
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+        pyautogui.press('tab')
+        pyautogui.write(shipdate)
+        
+    print('enter')
+    pyautogui.countdown(1)
+
+    for i in range(sh.nrows):
+        if i != 0:
+            try:
+                row = sh.row_values(i)
+
+                c1 = str(row[0])
+                c2 = int(row[ccount])
+
+                if c1 != '90502.0' and c1 != '90503.0' and c1 != 'TOTALS':
+                    c1 = c1.replace('.0', '')
+
+                    while len(c1) <5:
+                        c1 = '0'+ c1
+                    
+                    print(f'{c1[:5]}'); print('tab'); 
+
+                    print(f'{c2}'); print('enter')
+
+                    if i == 1:
+                        
+                        wp.after(1, box1.insert(tk.END, f"\nPausing to let the computer think"))
+                        wp.update_idletasks()
+                        wp.update()
+                        pyautogui.sleep(5)
+                        wp.after(1, box1.insert(tk.END, f"\nContinuing process"))
+                        wp.update_idletasks()
+                        wp.update()
+                        
+                    
+
+                        
+
+
+                elif c1 == 'TOTALS':
+                    box1.insert(tk.END, f"\nEntry Complete. \nTotal Cases {c2}")
+                    wp.update_idletasks()
+                    wp.update()
+
+                    print('before image check')
+                    casecountimg = pyautogui.screenshot(region = (830,687,80,50))
+                    frame = np.array(casecountimg)
+                    returned = reader.readtext(frame, detail=0)
+                    text = returned[0]
+
+                    print(text)
+
+                    if int(text) != c2:
+                        print('if condition')
+                        print(f'Count wrong. Kill process. isolate file {fname} for reprocessing.')
+                        pyautogui.moveTo(0,0)
+
+                    
+                    else:
+                        print('else condition')
+                        shu.move(file, finfolder)    
+
+                        pyautogui.write('after: pressedf6')
+
+                        pyautogui.countdown(2)
+                        
+
+                    
+                    print('after condition')
+                else:
+                    print('pass')
+                    pass
+            except:
+                print('except')
+                pass
+
+
+                   
+
+
+
+def getCol():
+
+    global col
+    col = colentry.get()
+    colbutton.config(text=f'Column {col} Set!')
+    return
+
+
+def choose_folder():
+    global folder
+    folder_path = '/Users/mcalesterpepsi/Desktop/Code/process/gui/test/Order Sheets/to be processed'
+    if folder_path:
+        orderfolderbutton.config(text=f'Folder Selected')
+        orderfolderLabel.config(text = f'./{os.path.normpath(os.path.basename(folder_path))}')
+        folder = folder_path
+    return 
+
+
+def choose_finfolder():
+    global finfolder
+    folder_path = '/Users/mcalesterpepsi/Desktop/Code/process/gui/test/Order Sheets/Done'
+    if folder_path:
+        folderbutton.config(text=f'Folder Selected')
+        folderlabel.config(text = f'./{os.path.normpath(os.path.basename(folder_path))}')
+        finfolder = folder_path
+    return 
+
+def action_popup():
+
+
+    popup = tk.Toplevel(m)
+    popup.geometry(f"+{2*height}+{2//width}")
+
+    popup.title('prepare')
+
+    spacer = tk.Label(popup, text = '')
+    spacer.pack()
+
+    label = tk.Label(popup, text = 'Prepare for process. Get KEYINVEN open.')
+    label.pack()
+
+    #label2 = tk.Label(popup, padx = 15, text= 'Once you press BEGIN you have 5s to select the entry box for the item code.')
+    #label2.pack()
+
+    label3 = tk.Label(popup, text = 'Once the process begins, do not interact with computer until done.')
+    label3.pack()
+
+    label5 = tk.Label(popup, text='')
+    label5.pack()
+
+    label4 = tk.Label(popup, text= 'To kill application in an emergency, move mouse to top corner of monitor.')
+    label4.pack()
+
+    label6 = tk.Label(popup, text='')
+    label6.pack()
+
+
+    
+
+    button = tk.Button(popup, text = 'BEGIN', command = lambda : fileIteration(col, folder, finfolder, popup, supplier))
+    button2 = tk.Button(popup, text = 'Close Popup', command = popup.destroy)
+
+    
+    button.pack()
+    button2.pack()
+
+#def setvar(strng):
+    
+    #global supplier
+    #supplier = strng
+    #if supplier == '':
+    #    suplabel.config(text='Wispak Selected')
+    #elif supplier =='c':
+    #    suplabel.config(text="Conops Selected")
+    #m.update_idletasks()
+    #m.update()
+
+
+m = tk.Tk()
+size = m.winfo_screenwidth()
+width = size//2
+height = m.winfo_screenheight()
+m.geometry(f"+{2*height}+{2//width}")
+m.winfo_toplevel()
+m.title('VIP Supplier Order Entry')
+
+folderbutton = tk.Button(m, text =f'Select Finished Folder', width= 25, command = choose_finfolder)
+folderlabel = tk.Label(m, text = f'')
+orderfolderbutton = tk.Button(m, text=f'Select Order Folder', width = 25, command = choose_folder)
+orderfolderLabel = tk.Label(m, text = f'')
+
+
+
+colLabel = tk.Label(m, text = 'Case count Column')
+colentry = tk.Entry(m, textvariable = '', width= 5)
+colentry.insert(0, 'g')
+colbutton = tk.Button(m, text= 'set', width= 10, command= getCol)
+
+supplier = ''
+#suplabel = tk.Label(m, text= "Choose Supplier")
+#WpButton = tk.Button(m , text = "Wispak", width = 10, command = lambda: setvar(''))
+#conButton = tk.Button(m, text = 'Conops', width= 10, command = lambda : setvar('c'))
+
+
+ok =  tk.Button(m, text='Ready', width = 10, command = action_popup)
+cancel = tk.Button(m, text='Cancel', width=10, command = m.destroy)
+
+img = Image.open('/Users/mcalesterpepsi/Desktop/Code/process/gui/pepsi.jpg')
+rimg = img.resize(size = (150,150))
+pythImg = ImageTk.PhotoImage(image = rimg)
+image = tk.Label(m, image = pythImg, padx = 25, pady = 25)
+
+#arrange main window in grid
+folderbutton.grid(row = 1, column =1, columnspan= 2)
+folderlabel.grid(row = 1, column=0, columnspan=1)
+orderfolderbutton.grid(row = 2, column =1, columnspan= 2)
+orderfolderLabel.grid(row=2, column=0 ,columnspan=  1)
+colLabel.grid(row=3, column = 0)
+colentry.grid(row=3, column = 1)
+colbutton.grid(pady = 10, row = 3, column = 2)
+#suplabel.grid(row=4, column=0)
+#WpButton.grid(row=4, column=1)
+#conButton.grid(row=4, column = 2)
+ok.grid(pady = 20, row = 5, column = 1)
+cancel.grid(row = 5, column = 2, padx = 20)
+image.grid(row = 1, column = 3,rowspan = 3, columnspan = 3,pady = 15, padx = 15)
+
+
+m.mainloop()
+
+
+
